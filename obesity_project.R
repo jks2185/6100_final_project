@@ -86,9 +86,6 @@ rt_accuracy_array <- c()
 
 
 for(i in 1:20){
-  dt_accuracy_array <- c()
-  dt_mean_time_array <- c()
-  rt_accuracy_array <- c()
   
   train <- sample(1:nrow(data), 0.7*nrow(data))
   validate <- setdiff(1:nrow(data), train)
