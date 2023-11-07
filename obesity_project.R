@@ -65,6 +65,7 @@ library(rpart)
 library(microbenchmark)
 library(caret)
 library(randomForest)
+library(e1071)
 # length(prediction)
 # length(data$ord_NObeyesdad)
 
@@ -78,11 +79,17 @@ library(randomForest)
 #   prediction <- predict(model, newdata, type = "class")
 #   return(prediction)
 # }
-rm(dt_accuracy_array, rt_accuracy_array)
+rm(dt_accuracy_array, rt_accuracy_array, dt_mean_time_array)
 dt_accuracy_array <- c()
+dt_mean_time_array <- c()
 rt_accuracy_array <- c()
 
+
 for(i in 1:20){
+  dt_accuracy_array <- c()
+  dt_mean_time_array <- c()
+  rt_accuracy_array <- c()
+  
   train <- sample(1:nrow(data), 0.7*nrow(data))
   validate <- setdiff(1:nrow(data), train)
   ####DECISION TREE MODEL####
@@ -91,6 +98,7 @@ for(i in 1:20){
   prediction <- predict(dt_model, data[validate,], type = "class")
   )
   #print(dt_matrix$overall['Accuracy'])
+  dt_mean_time_array <- c(dt_mean_time_array, mean(timing$time)) 
   dt_accuracy_array <- c(dt_accuracy_array, confusionMatrix(prediction, as.factor(data[validate,]$ord_NObeyesdad))$overall['Accuracy'])
   ###DECISION TREE MODEL####
   
@@ -101,20 +109,25 @@ for(i in 1:20){
   rt_accuracy_array <- c(rt_accuracy_array, confusionMatrix(rf_prediction, as.factor(data[validate,]$ord_NObeyesdad))$overall['Accuracy'])
   ####RANDOM TREE MODEL####
   
-  print("Done")
+  cat(i,"Done")
 }
 
 print(length(dt_accuracy_array))
 print(length(rt_accuracy_array))
+print(length(dt_mean_time_array))
 
 print(sum(dt_accuracy_array)/length(dt_accuracy_array))
 print(sum(rt_accuracy_array)/length(rt_accuracy_array))
 
-print(timing)
 
+train <- sample(1:nrow(data), 0.7*nrow(data))
+validate <- setdiff(1:nrow(data), train)
 
+svm_model <- svm(ord_NObeyesdad ~ ., data = data, subset = train, kernel = 'radial', cost = 1)
+svm_predict <- predict(svm_model, newdata = data[validate,])
 
+confusionMatrix(svm_predict, as.factor(data[validate,]$ord_NObeyesdad))$byClass
 
+result <- confusionMatrix(svm_predict, as.factor(data[validate,]$ord_NObeyesdad), mode = 'everything')
 
-
-
+sum(result$byClass[,3]) / length(result$byClass[,3])
